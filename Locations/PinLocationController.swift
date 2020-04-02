@@ -24,6 +24,8 @@ class PinLocationController: UIViewController {
     fileprivate let tableCellIdentifier = "LocationCell"
     let locationManager = CLLocationManager()
     var location: CLLocation?
+    var updatingLocation = false
+    var lastLocationError: Error?
     
     @IBOutlet weak var locationTableView: UITableView!
     
@@ -55,6 +57,10 @@ class PinLocationController: UIViewController {
         let dismissAction = UIAlertAction(title: "dismiss", style: .default, handler: nil)
         alert.addAction(dismissAction)
         present(alert, animated: true, completion: nil)
+    }
+    
+    private func stopLocationManager() {
+        
     }
 }
 
@@ -90,6 +96,11 @@ extension PinLocationController: UITableViewDataSource {
 extension PinLocationController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("didFailWithError \(error.localizedDescription)")
+        if (error as NSError).code == CLError.locationUnknown.rawValue {
+            return
+        }
+        lastLocationError = error
+        stopLocationManager()
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
