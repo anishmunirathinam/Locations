@@ -35,9 +35,7 @@ class PinLocationController: UIViewController {
     
     @IBAction func getLocation() {
         getLocationServiceAuthorization()
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
-        locationManager.startUpdatingLocation()
+        startLocationManager()
     }
     
     private func getLocationServiceAuthorization() {
@@ -59,8 +57,36 @@ class PinLocationController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    private func startLocationManager() {
+        if CLLocationManager.locationServicesEnabled() {
+            locationManager.delegate = self
+            locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+            locationManager.startUpdatingLocation()
+            updatingLocation = true
+        }
+    }
+    
     private func stopLocationManager() {
-        
+        if updatingLocation {
+            locationManager.stopUpdatingLocation()
+            locationManager.delegate = nil
+            updatingLocation = false
+        }
+    }
+    
+    private func handleLocationError() {
+        if let error = lastLocationError as? NSError {
+            if error.domain == kCLErrorDomain && error.code == CLError.denied.rawValue {
+                print("Show location services diabled alert")
+                showLocationServicesDeniedAlert()
+            } else {
+                print("error getting location")
+            }
+        } else if !CLLocationManager.locationServicesEnabled() {
+            showLocationServicesDeniedAlert()
+        } else if updatingLocation {
+            print("show activity indicator")
+        }
     }
 }
 
@@ -84,6 +110,8 @@ extension PinLocationController: UITableViewDataSource {
             default:
                 break
             }
+        } else {
+            handleLocationError()
         }
         return cell
     }
